@@ -1,8 +1,145 @@
-﻿using ECommerce.CartExperience.Api.Services.Interfaces;
+﻿using ECommerce.CartExperience.Api.Models;
+using ECommerce.CartExperience.Api.Repositories.Interfaces;
+using ECommerce.CartExperience.Api.Services.Interfaces;
 
 namespace ECommerce.CartExperience.Api.Services
 {
     public class CartExperienceService : ICartExperienceService
     {
+        private readonly ICartItemRepository _cartItemRepository;
+        private readonly ICartRepository _cartRepository;
+        private readonly IItemRepository _itemRepository;
+
+        public CartExperienceService(ICartItemRepository cartItemRepository,
+            ICartRepository cartRepository, IItemRepository itemRepository)
+        {
+            _cartItemRepository = cartItemRepository;
+            _cartRepository = cartRepository;
+            _itemRepository = itemRepository;
+        }
+
+        public async Task<CartItem> AddItemToCart(string phoneNumber, string itemName, int quantity)
+        {
+            //get cart by its id or phoneNumber
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                throw new ArgumentNullException("Kindly provided the appropriate phoneNumber");
+            }
+
+            //if(cartItem == null || cartItem.Item == null)
+            if (string.IsNullOrEmpty(itemName))
+            {
+                throw new ArgumentNullException("The item's name must be provided");
+            }
+
+            if (quantity <= 0)
+            {
+                throw new ArgumentException("Kindly provided the quantity of this item");
+            }
+
+            var availableCart = _cartRepository.GetCartByPhoneNumber(phoneNumber);
+
+            //if the cart or its cartItems are empty, create a new one
+            if (availableCart == null)
+            {
+                availableCart = await _cartRepository.AddCart(new Cart
+                {
+                    PhoneNumber = phoneNumber,
+                });
+            }
+
+            if (availableCart?.CartItems == null || !availableCart.CartItems.Any())
+            {
+                //create the item
+                var item = await _itemRepository.AddItem(itemName);
+
+                await _cartItemRepository.AddCartItem(availableCart!, item, quantity);
+
+                return availableCart?.CartItems.FirstOrDefault(c => c.Item.ItemId == item.ItemId)!;
+            }
+
+            //in the carts list of items, search for item with the same name
+            var existingCartItem = availableCart.CartItems.FirstOrDefault(
+                c => c.Item.ItemName == itemName);
+
+            if (existingCartItem != null)
+            {
+                //if found, increase its quantity
+                await _cartItemRepository.UpdateCartItemQuantity(
+                    existingCartItem, quantity);
+
+                return existingCartItem;
+            }
+
+            var newItem = await _itemRepository.AddItem(itemName);
+
+            await _cartItemRepository.AddCartItem(availableCart, newItem, quantity);
+
+            return availableCart!.CartItems.FirstOrDefault(c => c.Item.ItemName == itemName)!;
+        }
+
+        public IEnumerable<CartItem> GetAllCartItems(string phoneNumber, DateTimeOffset time,
+            int quantity, string itemName)
+        {
+            var allCartItems = new List<CartItem>();
+
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                return allCartItems;
+            }
+
+            //get cart by phoneNumber
+            var cart = _cartRepository.GetCartByPhoneNumber(phoneNumber);
+
+            if (cart == null)
+            {
+                return allCartItems;
+            }
+
+            allCartItems = cart.CartItems.Where(c => c.TimeAddedToCart == time
+                || c.ItemQuantity == quantity || c.Item.ItemName == itemName).ToList();
+
+            if (!allCartItems.Any())
+            {
+                return cart.CartItems.ToList();
+            }
+
+            return allCartItems;
+        }
+
+        public CartItem? GetCartItem(int cartItemId)
+        {
+            if (cartItemId <= 0)
+            {
+                throw new ArgumentException("Kindly provide the correct cartItem id");
+            }
+
+            return _cartItemRepository.GetCartItemById(cartItemId);
+        }
+
+        public IEnumerable<CartItem?> GetCartItemByItemName(string itemName)
+        {
+            if (string.IsNullOrEmpty(itemName))
+            {
+                throw new ArgumentNullException();
+            }
+
+            return  _cartItemRepository.GetCartItemByItemName(itemName);
+        }
+
+        public async Task<CartItem?> RemoveCartItem(int cartItemId)
+        {
+            var cartItem =  GetCartItem(cartItemId);
+
+            if (cartItem == null)
+            {
+                return null;
+            }
+
+            await _cartItemRepository.RemoveCartItem(cartItemId);
+
+            return cartItem;
+        }
+
     }
 }

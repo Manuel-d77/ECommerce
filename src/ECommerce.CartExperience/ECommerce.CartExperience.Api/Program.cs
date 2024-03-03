@@ -1,5 +1,10 @@
+using ECommerce.CartExperience.Api.Data;
+using ECommerce.CartExperience.Api.Repositories;
+using ECommerce.CartExperience.Api.Repositories.Interfaces;
 using ECommerce.CartExperience.Api.Services;
 using ECommerce.CartExperience.Api.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace ECommerce.CartExperience.Api
 {
@@ -12,6 +17,12 @@ namespace ECommerce.CartExperience.Api
             // Add services to the container.
 
             builder.Services.AddScoped<ICartExperienceService, CartExperienceService>();
+            builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
+            builder.Services.AddScoped<ICartRepository, CartRepository>();
+            builder.Services.AddScoped<IItemRepository, ItemRepository>();
+
+            builder.Services.AddDbContext<DataContext>(options =>
+                options.UseInMemoryDatabase("CartDb"));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
