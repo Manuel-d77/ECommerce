@@ -48,10 +48,9 @@ namespace ECommerce.CartExperience.Api.Repositories
 
         public IEnumerable<CartItem?> GetCartItemByItemName(string itemName)
         {
-            var res = _dataContext.CartItems.Include(ci => ci.Item)
+            var result = _dataContext.CartItems.Include(ci => ci.Item)
                 .Where(c => c.Item.ItemName == itemName);
-            //.SingleOrDefault(c => c.Item.ItemName == itemName);
-            return res;
+            return result;
         }
 
         public async Task RemoveCartItem(int cartItemId)

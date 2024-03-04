@@ -20,13 +20,11 @@ namespace ECommerce.CartExperience.Api.Services
 
         public async Task<CartItem> AddItemToCart(string phoneNumber, string itemName, int quantity)
         {
-            //get cart by its id or phoneNumber
             if (string.IsNullOrWhiteSpace(phoneNumber))
             {
                 throw new ArgumentNullException("Kindly provided the appropriate phoneNumber");
             }
 
-            //if(cartItem == null || cartItem.Item == null)
             if (string.IsNullOrEmpty(itemName))
             {
                 throw new ArgumentNullException("The item's name must be provided");
@@ -37,9 +35,10 @@ namespace ECommerce.CartExperience.Api.Services
                 throw new ArgumentException("Kindly provided the quantity of this item");
             }
 
+            //get cart by its phoneNumber
             var availableCart = _cartRepository.GetCartByPhoneNumber(phoneNumber);
 
-            //if the cart or its cartItems are empty, create a new one
+            //if the cart does not exist, create a new one
             if (availableCart == null)
             {
                 availableCart = await _cartRepository.AddCart(new Cart
@@ -88,7 +87,6 @@ namespace ECommerce.CartExperience.Api.Services
                 return allCartItems;
             }
 
-            //get cart by phoneNumber
             var cart = _cartRepository.GetCartByPhoneNumber(phoneNumber);
 
             if (cart == null)

@@ -3,7 +3,7 @@
 namespace ECommerce.CartExperience.Api.Services.Interfaces
 {
     /// <summary>
-    ///     This will be responsible for performing the CRUD operations on a cart
+    ///     This will be responsible for performing the CRUD operations on a Cart
     /// </summary>
     public interface ICartExperienceService
     {
