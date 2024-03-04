@@ -1,4 +1,4 @@
-﻿using ECommerce.CartExperience.Api.Models;
+using ECommerce.CartExperience.Api.Models;
 
 namespace ECommerce.CartExperience.Api.Repositories.Interfaces
 {
@@ -26,12 +26,14 @@ namespace ECommerce.CartExperience.Api.Repositories.Interfaces
         /// <summary>
         ///     Removes an Item from a Cart
         /// </summary>
-        public Task RemoveCartItem(int cartItemId);
+        public Task<bool> RemoveCartItem(int cartItemId);
 
         /// <summary>
         ///     Updates the quantity of CartItems in a Cart
         /// </summary>
         public Task<CartItem> UpdateCartItemQuantity(CartItem cartItem, int quantity);
+
+        public Task<CartItem> ReduceCartItemQuantity(CartItem cartItem, int quantity);
 
     }
 }
