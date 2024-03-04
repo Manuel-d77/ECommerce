@@ -23,11 +23,29 @@ namespace ECommerce.CartExperience.Api.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(cartRequest.PhoneNumber) ||
+                if (string.IsNullOrEmpty(cartRequest.PhoneNumber) ||
                     cartRequest.PhoneNumber.Length != 10)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest,
-                        "PhoneNumber must be 10 digits long");
+                        "PhoneNumber must be 10 digits");
+                }
+
+                if (!int.TryParse(cartRequest.PhoneNumber, out _))
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        "PhoneNumber must be 10 digits");
+                }
+
+                if (string.IsNullOrEmpty(cartRequest.ItemName))
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        "Kindly provide the item's name");
+                }
+
+                if (cartRequest.Quantity <= 0)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        "The item's quantity must be a positive whole number");
                 }
 
                 var newCartItem = await _cartService.AddItemToCart(
@@ -59,7 +77,7 @@ namespace ECommerce.CartExperience.Api.Controllers
 
                 if (result == false)
                 {
-                    return NotFound();
+                    return NotFound($"The item with Id:{cartItemId} does not exist in the cart");
                 }
 
                 return Ok($"Item with Id: {cartItemId} has been successfully deleted");
@@ -72,14 +90,14 @@ namespace ECommerce.CartExperience.Api.Controllers
 
         }
 
-        //HttpDelete to remove an item to the cart
+        //HttpPut to update an item's quantity in the cart
         [HttpPut]
         [Route("reduce/{cartItemId}")]
         public async Task<IActionResult> ReduceItemQuantityInCartAsync(int cartItemId, int quantity)
         {
             try
             {
-                if (cartItemId <= 0 && quantity <= 0)
+                if (cartItemId <= 0 || quantity <= 0)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest,
                         "Kindly provide the correct CartItem Id and the quantity to remove from your cart");
@@ -88,15 +106,15 @@ namespace ECommerce.CartExperience.Api.Controllers
 
                 if (cartItem .IsFoundAndDeleted == false)
                 {
-                    return NotFound();
+                    return NotFound($"The item with Id:{cartItemId} does not exist in the cart");
                 }
 
-                return Ok();
+                return Ok($"The quantity of the item with Id:{cartItemId} has been successfully updated");
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Failed to delete cart item: {ex.Message}");
+                    $"Failed to up cart item's quantity: {ex.Message}");
             }
 
         }
@@ -104,9 +122,8 @@ namespace ECommerce.CartExperience.Api.Controllers
         //HttpGet to retrieve item(s) from the cart
         [HttpGet]
         [Route("allItems/{phoneNumber}")]
-        public ActionResult<IEnumerable<CartItem>> GetAllItemsFromCart//([FromBody] AllCartItemsRequest request)
-            ( string phoneNumber,
-            DateTimeOffset time, int quantity, string? itemName)
+        public ActionResult<IEnumerable<CartItem>> GetAllItemsFromCart(
+            string phoneNumber, DateTimeOffset time, int quantity, string? itemName)
         {
             try
             {
@@ -136,7 +153,7 @@ namespace ECommerce.CartExperience.Api.Controllers
                 var cartItem =  _cartService.GetCartItem(cartItemId);
 
                 if (cartItem == null)
-                    return NotFound();
+                    return NotFound($"The item with Id:{cartItemId} does not exist in the cart");
 
                 return Ok(cartItem);
             }

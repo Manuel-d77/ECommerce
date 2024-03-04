@@ -20,21 +20,6 @@ namespace ECommerce.CartExperience.Api.Services
 
         public async Task<CartItem> AddItemToCart(string phoneNumber, string itemName, int quantity)
         {
-            if (string.IsNullOrWhiteSpace(phoneNumber))
-            {
-                throw new ArgumentNullException("Kindly provided the appropriate phoneNumber");
-            }
-
-            if (string.IsNullOrEmpty(itemName))
-            {
-                throw new ArgumentNullException("The item's name must be provided");
-            }
-
-            if (quantity <= 0)
-            {
-                throw new ArgumentException("Kindly provided the quantity of this item");
-            }
-
             //get cart by its phoneNumber
             var availableCart = _cartRepository.GetCartByPhoneNumber(phoneNumber);
 
@@ -59,7 +44,7 @@ namespace ECommerce.CartExperience.Api.Services
 
             //in the carts list of items, search for item with the same name
             var existingCartItem = availableCart.CartItems.FirstOrDefault(
-                c => c.Item.ItemName == itemName);
+                c => c.Item.ItemName == itemName.ToLower());
 
             if (existingCartItem != null)
             {
@@ -113,16 +98,6 @@ namespace ECommerce.CartExperience.Api.Services
             }
 
             return _cartItemRepository.GetCartItemById(cartItemId);
-        }
-
-        public IEnumerable<CartItem?> GetCartItemByItemName(string itemName)
-        {
-            if (string.IsNullOrEmpty(itemName))
-            {
-                throw new ArgumentNullException();
-            }
-
-            return  _cartItemRepository.GetCartItemByItemName(itemName);
         }
 
         public async Task<bool> RemoveCartItem(int cartItemId)

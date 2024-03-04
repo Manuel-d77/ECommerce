@@ -9,7 +9,6 @@ namespace ECommerce.CartExperience.Api.Services.Interfaces
     {
         Task<CartItem> AddItemToCart(string phoneNumber, string itemName, int quantity);
         CartItem? GetCartItem(int cartItemId);
-        IEnumerable<CartItem?> GetCartItemByItemName(string itemName);
         Task<bool> RemoveCartItem(int cartItemId);
         Task<CartItemRemovalResponse> ReduceCartItemQuantity(int cartItemId, int quantity);
         IEnumerable<CartItem> GetAllCartItems(string phoneNumber, DateTimeOffset time,
