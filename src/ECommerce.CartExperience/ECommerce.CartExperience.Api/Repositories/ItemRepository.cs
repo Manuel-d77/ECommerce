@@ -1,4 +1,4 @@
-﻿using ECommerce.CartExperience.Api.Data;
+using ECommerce.CartExperience.Api.Data;
 using ECommerce.CartExperience.Api.Models;
 using ECommerce.CartExperience.Api.Repositories.Interfaces;
 
@@ -20,7 +20,7 @@ namespace ECommerce.CartExperience.Api.Repositories
             {
                 var newItem = new Item
                 {
-                    ItemName = name,
+                    ItemName = name.ToLower(),
                     UnitPrice = GenerateItemPrice()
                 };
 
@@ -36,7 +36,7 @@ namespace ECommerce.CartExperience.Api.Repositories
 
         private Item? GetItemByName(string name)
         {
-            return _dataContext.Items.SingleOrDefault(i => i.ItemName == name);
+            return _dataContext.Items.SingleOrDefault(i => i.ItemName == name.ToLower());
         }
 
         private decimal GenerateItemPrice()
