@@ -1,4 +1,4 @@
-﻿using ECommerce.CartExperience.Api.Data;
+using ECommerce.CartExperience.Api.Data;
 using ECommerce.CartExperience.Api.Models;
 using ECommerce.CartExperience.Api.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +53,7 @@ namespace ECommerce.CartExperience.Api.Repositories
             return result;
         }
 
-        public async Task RemoveCartItem(int cartItemId)
+        public async Task<bool> RemoveCartItem(int cartItemId)
         {
             var cartItem =  GetCartItemById(cartItemId);
 
@@ -66,6 +66,7 @@ namespace ECommerce.CartExperience.Api.Repositories
             _dataContext.CartItems.Remove(cartItem);
 
             await _dataContext.SaveChangesAsync();
+            return true;
         }
 
         public async Task<CartItem> UpdateCartItemQuantity(CartItem cartItem, int quantity)
@@ -73,6 +74,17 @@ namespace ECommerce.CartExperience.Api.Repositories
             _dataContext.Update(cartItem);
 
             cartItem.ItemQuantity += quantity;
+
+            await _dataContext.SaveChangesAsync();
+
+            return cartItem;
+        }
+
+        public async Task<CartItem> ReduceCartItemQuantity(CartItem cartItem, int quantity)
+        {
+            _dataContext.Update(cartItem);
+
+            cartItem.ItemQuantity -= quantity;
 
             await _dataContext.SaveChangesAsync();
 
