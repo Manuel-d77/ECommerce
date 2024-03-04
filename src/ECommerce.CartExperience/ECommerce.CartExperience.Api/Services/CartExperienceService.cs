@@ -1,4 +1,4 @@
-﻿using ECommerce.CartExperience.Api.Models;
+using ECommerce.CartExperience.Api.Models;
 using ECommerce.CartExperience.Api.Repositories.Interfaces;
 using ECommerce.CartExperience.Api.Services.Interfaces;
 
@@ -125,18 +125,49 @@ namespace ECommerce.CartExperience.Api.Services
             return  _cartItemRepository.GetCartItemByItemName(itemName);
         }
 
-        public async Task<CartItem?> RemoveCartItem(int cartItemId)
+        public async Task<bool> RemoveCartItem(int cartItemId)
         {
+            var result = false;
+
             var cartItem =  GetCartItem(cartItemId);
 
             if (cartItem == null)
             {
-                return null;
+                return result;
             }
 
-            await _cartItemRepository.RemoveCartItem(cartItemId);
+            return await _cartItemRepository.RemoveCartItem(cartItemId);
+        }
 
-            return cartItem;
+        public async Task<CartItemRemovalResponse> ReduceCartItemQuantity(int cartItemId, int quantity)
+        {
+            var cartItem = GetCartItem(cartItemId);
+
+            var response = new CartItemRemovalResponse();
+
+            if (cartItem == null)
+            {
+                response.CartItem = null;
+                response.IsFoundAndDeleted = false;
+
+                return response;
+            }
+
+            if (cartItem.ItemQuantity < quantity)
+            {
+                throw new ArgumentException($"The number of {cartItem.Item.ItemName} in your Cart is {cartItem.ItemQuantity}");
+            }
+
+            if (cartItem.ItemQuantity > quantity && cartItem.ItemQuantity != quantity)
+            {
+                response.CartItem = await _cartItemRepository.ReduceCartItemQuantity(cartItem, quantity);
+                response.IsFoundAndDeleted = true;
+                return response;
+            }
+
+            response.IsFoundAndDeleted = await _cartItemRepository.RemoveCartItem(cartItemId);
+
+            return response;
         }
 
     }
