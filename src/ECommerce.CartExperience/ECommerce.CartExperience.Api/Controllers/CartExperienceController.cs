@@ -1,4 +1,4 @@
-﻿using ECommerce.CartExperience.Api.Models;
+using ECommerce.CartExperience.Api.Models;
 using ECommerce.CartExperience.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,20 +19,19 @@ namespace ECommerce.CartExperience.Api.Controllers
 
         [HttpPost]
         [Route("add-item")]
-        public async Task<IActionResult> AddItemToCartAsync(string phoneNumber,
-            string itemName, int quantity)
+        public async Task<IActionResult> AddItemToCartAsync([FromBody]CartRequest cartRequest)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(phoneNumber) || 
-                    phoneNumber.Length != 10)
+                if (string.IsNullOrWhiteSpace(cartRequest.PhoneNumber) ||
+                    cartRequest.PhoneNumber.Length != 10)
                 {
                     return StatusCode(StatusCodes.Status400BadRequest,
                         "PhoneNumber must be 10 digits long");
                 }
 
                 var newCartItem = await _cartService.AddItemToCart(
-                    phoneNumber, itemName, quantity);
+                    cartRequest.PhoneNumber, cartRequest.ItemName, cartRequest.Quantity);
 
                 return Ok(newCartItem);
             }
@@ -50,14 +49,49 @@ namespace ECommerce.CartExperience.Api.Controllers
         {
             try
             {
-                var cartItem = await _cartService.RemoveCartItem(cartItemId);
+                if (cartItemId <= 0 )
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        "Kindly provide the correct CartItem Id and the quantity to remove from your cart");
+                }
+                
+                var result = await _cartService.RemoveCartItem(cartItemId);
 
-                if (cartItem == null)
+                if (result == false)
                 {
                     return NotFound();
                 }
 
-                return Ok(cartItem);
+                return Ok($"Item with Id: {cartItemId} has been successfully deleted");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    $"Failed to delete cart item: {ex.Message}");
+            }
+
+        }
+
+        //HttpDelete to remove an item to the cart
+        [HttpPut]
+        [Route("reduce/{cartItemId}")]
+        public async Task<IActionResult> ReduceItemQuantityInCartAsync(int cartItemId, int quantity)
+        {
+            try
+            {
+                if (cartItemId <= 0 && quantity <= 0)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        "Kindly provide the correct CartItem Id and the quantity to remove from your cart");
+                }
+                var cartItem = await _cartService.ReduceCartItemQuantity(cartItemId, quantity);
+
+                if (cartItem .IsFoundAndDeleted == false)
+                {
+                    return NotFound();
+                }
+
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -69,9 +103,10 @@ namespace ECommerce.CartExperience.Api.Controllers
 
         //HttpGet to retrieve item(s) from the cart
         [HttpGet]
-        [Route("allItems")]
-        public ActionResult<IEnumerable<CartItem>> GetAllItemsFromCart(string phoneNumber,
-            DateTimeOffset time, int quantity, string itemName)
+        [Route("allItems/{phoneNumber}")]
+        public ActionResult<IEnumerable<CartItem>> GetAllItemsFromCart//([FromBody] AllCartItemsRequest request)
+            ( string phoneNumber,
+            DateTimeOffset time, int quantity, string? itemName)
         {
             try
             {
@@ -112,25 +147,6 @@ namespace ECommerce.CartExperience.Api.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("{itemName}")]
-        public ActionResult GetCartItemByItemName(string itemName)
-        {
-            try
-            {
-                var cartItem =  _cartService.GetCartItemByItemName(itemName);
-
-                if (cartItem == null)
-                    return NotFound();
-
-                return Ok(cartItem);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Failed to retrieve cart item: {ex.Message}");
-            }
-        }
 
     }
 }
