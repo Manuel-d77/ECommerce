@@ -114,7 +114,7 @@ namespace ECommerce.CartExperience.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    $"Failed to up cart item's quantity: {ex.Message}");
+                    $"Failed to update cart item's quantity: {ex.Message}");
             }
 
         }

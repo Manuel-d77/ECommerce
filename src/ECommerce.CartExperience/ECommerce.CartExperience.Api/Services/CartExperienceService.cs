@@ -130,7 +130,8 @@ namespace ECommerce.CartExperience.Api.Services
 
             if (cartItem.ItemQuantity < quantity)
             {
-                throw new ArgumentException($"The number of {cartItem.Item.ItemName} in your Cart is {cartItem.ItemQuantity}");
+                throw new ArgumentException($"The number of \"{cartItem.Item.ItemName}\"" +
+                    $" in your Cart is {cartItem.ItemQuantity}. CartItem quantity reduction failed");
             }
 
             if (cartItem.ItemQuantity > quantity && cartItem.ItemQuantity != quantity)
